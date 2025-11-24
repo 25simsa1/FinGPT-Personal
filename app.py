@@ -1,0 +1,143 @@
+# app.py
+import streamlit as st
+import pandas as pd
+import yfinance as yf
+import matplotlib.pyplot as plt
+import json, os
+from data_fetcher import get_stock_data, get_news
+from summarizer import summarize_text, analyze_sentiment
+from portfolio import load_portfolio, add_holding, remove_holding, calculate_portfolio_value
+from alerts import schedule_daily_alert, send_email, generate_daily_summary
+
+st.set_page_config(page_title="FinGPT-Personal", layout="wide")
+
+st.title("FinGPT+ : Your Private Equity Workstation")
+
+# Sidebar Navigation
+section = st.sidebar.radio("Navigate", ["AI Research Copilot", "Portfolio Tracker", "Daily Alerts Setup"])
+
+# ===== Portfolio Tracker Section =====
+if section == "Portfolio Tracker":
+    st.header("Portfolio Tracker")
+
+    with st.expander("➕ Add Holding"):
+        ticker = st.text_input("Ticker (e.g. AAPL)", key="add_ticker")
+        shares = st.number_input("Shares", min_value=0.0, step=1.0, key="add_shares")
+        buy_price = st.number_input("Buy Price ($)", min_value=0.0, step=0.01, key="add_buy_price")
+        if st.button("Add to Portfolio"):
+            add_holding(ticker, shares, buy_price)
+            st.success(f"Added {shares} shares of {ticker} @ ${buy_price}")
+
+    portfolio_df, summary = calculate_portfolio_value()
+
+    if not portfolio_df.empty:
+        st.subheader("Your Holdings")
+        st.dataframe(portfolio_df)
+
+        st.subheader("Portfolio Summary")
+        st.metric(label="Total Value ($)", value=f"{summary['Total Value ($)']:,}")
+        st.metric(label="Net P/L ($)", value=f"{summary['Net P/L ($)']:,}")
+
+        remove_ticker = st.selectbox("Remove a holding", ["None"] + list(portfolio_df['Ticker']))
+        if remove_ticker != "None" and st.button("Remove"):
+            remove_holding(remove_ticker)
+            st.warning(f"Removed {remove_ticker} from portfolio.")
+    else:
+        st.info("Your portfolio is empty. Add holdings above to get started.")
+
+# ===== AI Research Copilot Section =====
+elif section == "AI Research Copilot":
+    st.header("AI Equity Research Copilot")
+
+    ticker = st.text_input("Enter Stock Ticker (e.g. AAPL)", "AAPL")
+
+    if st.button("Analyze"):
+        with st.spinner('Fetching market data...'):
+            data = get_stock_data(ticker)
+
+        with st.spinner('Fetching price history...'):
+            hist = yf.download(ticker, period="6mo")
+
+        with st.spinner('Fetching news...'):
+            news_items = get_news(ticker)
+
+        with st.spinner('Generating summary...'):
+            news_text = "\n".join([n['title'] + ': ' + n['summary'] for n in news_items])
+            summary = summarize_text(ticker, data, news_text)
+            sentiment = analyze_sentiment(summary)
+
+        st.subheader(f"Fundamentals for {ticker}")
+        st.dataframe(pd.DataFrame([data]))
+
+        st.subheader("Price History (6 months)")
+        st.line_chart(hist["Close"])
+
+        st.subheader("Recent News")
+        for n in news_items:
+            st.markdown(f"- [{n['title']}]({n['link']})")
+
+        st.subheader("AI Summary")
+        st.text(summary)
+
+        st.subheader("Sentiment Indicator")
+        if sentiment == "positive":
+            st.success("📈 Bullish sentiment detected")
+        elif sentiment == "negative":
+            st.error("📉 Bearish sentiment detected")
+        else:
+            st.info("⚖️ Neutral sentiment detected")
+
+        score_map = {"positive": 1, "neutral": 0, "negative": -1}
+        score = score_map[sentiment]
+
+        fig, ax = plt.subplots(figsize=(4, 0.5))
+        color = "green" if score > 0 else "red" if score < 0 else "gray"
+        ax.barh(["Sentiment"], [score], color=color)
+        ax.set_xlim(-1, 1)
+        ax.set_yticks([])
+        ax.set_xticks([])
+        ax.set_frame_on(False)
+        st.pyplot(fig)
+
+# ===== Daily Alerts Setup =====
+elif section == "Daily Alerts Setup":
+    st.header("Daily Alerts Setup")
+
+    st.write("Set up automatic daily email summaries of your portfolio.")
+
+    email_config_file = "email_config.json"
+
+    if os.path.exists(email_config_file):
+        with open(email_config_file) as f:
+            config = json.load(f)
+    else:
+        config = {"email": "", "enabled": False}
+
+    email = st.text_input("Enter your email address", value=config.get("email", ""))
+    enable_alerts = st.checkbox("Enable daily alerts", value=config.get("enabled", False))
+
+    if st.button("Save Settings"):
+        config = {"email": email, "enabled": enable_alerts}
+        json.dump(config, open(email_config_file, "w"), indent=2)
+        st.success("✅ Email alert settings saved.")
+
+        if enable_alerts and email:
+            st.info(f"Daily alerts scheduled for {email}. Keep this app running or host it online.")
+            schedule_daily_alert(email)
+        elif not enable_alerts:
+            st.warning("Alerts disabled. You can re-enable them anytime.")
+
+    # Manual test email button
+    st.divider()
+    st.subheader("✉️ Send Test Email")
+    if st.button("Send Test Email"):
+        if not email:
+            st.error("Please enter your email above first.")
+        else:
+            st.info("Sending test email...")
+            try:
+                content, csv_path = generate_daily_summary()
+                send_email(email, content, csv_path)
+                st.success(f"✅ Test email sent successfully to {email}!")
+            except Exception as e:
+                st.error(f"❌ Failed to send test email: {e}")
