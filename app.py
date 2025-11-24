@@ -156,3 +156,8 @@ if ticker:
         st.markdown(f"- [{n['title']}]({n['link']}) — {n['summary']}")
     st.write("### AI Summary")
     st.write(summarize_text(ticker, fundamentals, news))
+    if news:
+        st.markdown("#### Sources & Citations")
+    for n in news:
+        st.markdown(f"- [{n['source']}]({n['link']}) — *{n['title']}*")
+
