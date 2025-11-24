@@ -6,3 +6,4 @@ openai
 matplotlib
 textblob
 schedule
+python-dotenv
