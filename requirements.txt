@@ -8,3 +8,4 @@ textblob
 schedule
 python-dotenv
 alpha_vantage
+alpha_vantage
