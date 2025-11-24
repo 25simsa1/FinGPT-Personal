@@ -1,0 +1,8 @@
+venv/
+__pycache__/
+*.pyc
+*.csv
+.env
+portfolio.json
+watchlist.json
+email_config.json
