@@ -4,7 +4,7 @@ import pandas as pd
 import yfinance as yf
 import matplotlib.pyplot as plt
 import json, os
-from data_fetcher import get_stock_data, get_news
+from data_fetcher import get_stock_data, get_extended_news
 from summarizer import summarize_text, analyze_sentiment
 from portfolio import load_portfolio, add_holding, remove_holding, calculate_portfolio_value
 from alerts import schedule_daily_alert, send_email, generate_daily_summary
@@ -141,3 +141,18 @@ elif section == "Daily Alerts Setup":
                 st.success(f"✅ Test email sent successfully to {email}!")
             except Exception as e:
                 st.error(f"❌ Failed to send test email: {e}")
+
+from data_fetcher import get_stock_data, get_news
+from summarizer import summarize_text
+
+ticker = st.text_input("Enter Stock Ticker (e.g. AAPL)")
+if ticker:
+    fundamentals = get_stock_data(ticker)
+    news = get_extended_news(ticker)
+    st.write("### Fundamentals")
+    st.json(fundamentals)
+    st.write("### Recent News")
+    for n in news:
+        st.markdown(f"- [{n['title']}]({n['link']}) — {n['summary']}")
+    st.write("### AI Summary")
+    st.write(summarize_text(ticker, fundamentals, news))
