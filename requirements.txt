@@ -9,3 +9,5 @@ schedule
 python-dotenv
 alpha_vantage
 alpha_vantage
+feedparser
+beautifulsoup4
