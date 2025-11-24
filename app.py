@@ -157,23 +157,3 @@ elif section == "Daily Alerts Setup":
                 st.success(f"✅ Test email sent successfully to {email}!")
             except Exception as e:
                 st.error(f"❌ Failed to send test email: {e}")
-
-from data_fetcher import get_stock_data, get_news
-from summarizer import summarize_text
-
-ticker = st.text_input("Enter Stock Ticker (e.g. AAPL)")
-if ticker:
-    fundamentals = get_stock_data(ticker)
-    news = get_extended_news(ticker)
-    st.write("### Fundamentals")
-    st.json(fundamentals)
-    st.write("### Recent News")
-    for n in news:
-        st.markdown(f"- [{n['title']}]({n['link']}) — {n['summary']}")
-    st.write("### AI Summary")
-    st.write(summarize_text(ticker, fundamentals, news))
-    if news:
-        st.markdown("#### Sources & Citations")
-    for n in news:
-        st.markdown(f"- [{n['source']}]({n['link']}) — *{n['title']}*")
-
