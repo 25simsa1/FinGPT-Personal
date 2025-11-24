@@ -7,3 +7,4 @@ matplotlib
 textblob
 schedule
 python-dotenv
+alpha_vantage
