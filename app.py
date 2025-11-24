@@ -10,6 +10,22 @@ from portfolio import load_portfolio, add_holding, remove_holding, calculate_por
 from alerts import schedule_daily_alert, send_email, generate_daily_summary
 
 st.set_page_config(page_title="FinGPT-Personal", layout="wide")
+st.markdown("""
+    <style>
+    h1, h2, h3, h4 {
+        color: #1E90FF;
+        font-family: 'Inter', sans-serif;
+    }
+    .stMarkdown a {
+        color: #008CBA !important;
+        text-decoration: none;
+    }
+    .stMarkdown a:hover {
+        text-decoration: underline;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 
 st.title("FinGPT+ : Your Private Equity Workstation")
 
@@ -59,7 +75,7 @@ elif section == "AI Research Copilot":
             hist = yf.download(ticker, period="6mo")
 
         with st.spinner('Fetching news...'):
-            news_items = get_news(ticker)
+            news_items = get_extended_news(ticker)
 
         with st.spinner('Generating summary...'):
             news_text = "\n".join([n['title'] + ': ' + n['summary'] for n in news_items])
