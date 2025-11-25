@@ -25,7 +25,10 @@ Holdings Summary:
 
 Sentiment: {analyze_sentiment(str(df))}
 """
-    return message
+    # Save portfolio to CSV for attachment
+    df.to_csv("portfolio_report.csv", index=False)
+    return message, "portfolio_report.csv"
+
 
 def send_email(recipient_email, content):
     sender_email = os.getenv("EMAIL_SENDER")
@@ -37,6 +40,17 @@ def send_email(recipient_email, content):
     msg['To'] = recipient_email
     msg['Subject'] = "FinGPT Daily Summary"
     msg.attach(MIMEText(content, 'plain'))
+        # Attach portfolio report if provided
+    if os.path.exists("portfolio_report.csv"):
+        with open("portfolio_report.csv", "rb") as f:
+            from email.mime.base import MIMEBase
+            from email import encoders
+            part = MIMEBase('application', 'octet-stream')
+            part.set_payload(f.read())
+            encoders.encode_base64(part)
+            part.add_header("Content-Disposition", "attachment", filename="portfolio_report.csv")
+            msg.attach(part)
+
 
     try:
         server = smtplib.SMTP('smtp.gmail.com', 587)

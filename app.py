@@ -145,7 +145,7 @@ elif section == "Daily Alerts Setup":
 
     # Manual test email button
     st.divider()
-    st.subheader("✉️ Send Test Email")
+    st.subheader("Send Test Email")
     if st.button("Send Test Email"):
         if not email:
             st.error("Please enter your email above first.")
@@ -153,7 +153,7 @@ elif section == "Daily Alerts Setup":
             st.info("Sending test email...")
             try:
                 content, csv_path = generate_daily_summary()
-                send_email(email, content, csv_path)
+                send_email(email, content)
                 st.success(f"✅ Test email sent successfully to {email}!")
             except Exception as e:
                 st.error(f"❌ Failed to send test email: {e}")
