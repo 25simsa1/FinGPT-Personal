@@ -1,21 +1,32 @@
+# app.py
 import streamlit as st
 import pandas as pd
 import yfinance as yf
 import matplotlib.pyplot as plt
 import json, os
+from dotenv import load_dotenv
 from supabase import create_client, Client
 from data_fetcher import get_stock_data, get_extended_news
 from summarizer import summarize_text, analyze_sentiment
 from portfolio import add_holding, remove_holding, calculate_portfolio_value
 from alerts import send_email, generate_daily_summary
 
+# --- Load environment variables ---
+load_dotenv()
+
 # --- Setup ---
 st.set_page_config(page_title="FinGPT-Personal", layout="wide")
 
+# ✅ Correct Supabase environment variable usage
 SUPABASE_URL = os.getenv("https://hjqpawkaqwpkzujyqecx.supabase.co")
 SUPABASE_KEY = os.getenv("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqcXBhd2thcXdwa3p1anlxZWN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMjgwNjksImV4cCI6MjA3OTYwNDA2OX0.Ek7IXPAwVAEyjwrIQXtxRq3g4djeC-XpMwinKVm-DCM")
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+if not SUPABASE_URL or not SUPABASE_KEY:
+    st.error("⚠️ Supabase credentials missing. Please set SUPABASE_URL and SUPABASE_KEY in your environment.")
+else:
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+# --- Custom styling ---
 st.markdown("""
     <style>
     h1, h2, h3, h4 {
@@ -125,7 +136,7 @@ elif section == "Daily Alerts Setup":
     enable_sentiment_alerts = False
 
     # Load settings from Supabase
-    if email:
+    if SUPABASE_URL and SUPABASE_KEY and email:
         try:
             result = supabase.table("user_configs").select("*").eq("email", email).execute()
             if result.data:
