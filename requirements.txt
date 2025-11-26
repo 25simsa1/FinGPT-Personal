@@ -12,3 +12,4 @@ alpha_vantage
 feedparser
 beautifulsoup4
 supabase
+resend

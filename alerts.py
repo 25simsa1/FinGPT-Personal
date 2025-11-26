@@ -68,42 +68,34 @@ def monitor_sentiment(threshold=-0.5):
     else:
         print("No bearish sentiment detected.")
 
-
 def send_email(recipient_email, content):
-    sender_email = os.getenv("EMAIL_SENDER")
-    sender_password = os.getenv("EMAIL_PASSWORD")
+    import resend
     
-    # Debug: Check if credentials are loaded
-    if not sender_email:
-        raise Exception("❌ EMAIL_SENDER environment variable is not set")
-    if not sender_password:
-        raise Exception("❌ EMAIL_PASSWORD environment variable is not set")
+    resend.api_key = os.getenv("RESEND_API_KEY")
     
-    msg = MIMEMultipart()
-    msg['From'] = sender_email
-    msg['To'] = recipient_email
-    msg['Subject'] = "FinGPT Daily Summary"
-    msg.attach(MIMEText(content, 'plain'))
+    if not resend.api_key:
+        raise Exception("RESEND_API_KEY not set in environment variables")
     
-    # Attach portfolio report if provided
+    params = {
+        "from": "FinGPT <onboarding@resend.dev>",
+        "to": [recipient_email],
+        "subject": "FinGPT Daily Summary",
+        "text": content,
+    }
+    
+    # Add attachment if exists
     if os.path.exists("portfolio_report.csv"):
         with open("portfolio_report.csv", "rb") as f:
-            from email.mime.base import MIMEBase
-            from email import encoders
-            part = MIMEBase('application', 'octet-stream')
-            part.set_payload(f.read())
-            encoders.encode_base64(part)
-            part.add_header("Content-Disposition", "attachment", filename="portfolio_report.csv")
-            msg.attach(part)
+            import base64
+            content_base64 = base64.b64encode(f.read()).decode()
+            params["attachments"] = [{
+                "filename": "portfolio_report.csv",
+                "content": content_base64
+            }]
     
-    # Remove try-except to see the real error
-    server = smtplib.SMTP('smtp.gmail.com', 587)
-    server.starttls()
-    server.login(sender_email, sender_password)
-    server.send_message(msg)
-    server.quit()
-    print(f"✅ Daily summary email sent to {recipient_email}")
-
+    response = resend.Emails.send(params)
+    print(f"✅ Email sent to {recipient_email}, ID: {response['id']}")
+    
 def schedule_daily_alert(email):
     schedule.every().day.at("09:00").do(lambda: send_email(email, generate_daily_summary()))
     print(f"Scheduled daily FinGPT alerts for {email} at 09:00")
