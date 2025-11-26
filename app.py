@@ -18,8 +18,10 @@ load_dotenv()
 st.set_page_config(page_title="FinGPT-Personal", layout="wide")
 
 # ✅ Correct Supabase environment variable usage
-SUPABASE_URL = os.getenv("https://hjqpawkaqwpkzujyqecx.supabase.co")
-SUPABASE_KEY = os.getenv("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqcXBhd2thcXdwa3p1anlxZWN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMjgwNjksImV4cCI6MjA3OTYwNDA2OX0.Ek7IXPAwVAEyjwrIQXtxRq3g4djeC-XpMwinKVm-DCM")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+st.write("DEBUG: SUPABASE_URL =", SUPABASE_URL)
+st.write("DEBUG: SUPABASE_KEY starts with =", SUPABASE_KEY[:10] if SUPABASE_KEY else None)
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     st.error("⚠️ Supabase credentials missing. Please set SUPABASE_URL and SUPABASE_KEY in your environment.")
