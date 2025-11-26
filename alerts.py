@@ -17,6 +17,8 @@ def generate_daily_summary():
     total_pnl = summary['Net P/L ($)']
     message = f"""FinGPT Daily Summary
 
+
+
 Portfolio Value: ${total_value:,.2f}
 Net P/L: ${total_pnl:,.2f}
 
@@ -28,6 +30,43 @@ Sentiment: {analyze_sentiment(str(df))}
     # Save portfolio to CSV for attachment
     df.to_csv("portfolio_report.csv", index=False)
     return message, "portfolio_report.csv"
+
+import pandas as pd
+from summarizer import analyze_sentiment, summarize_text
+from data_fetcher import get_stock_data, get_extended_news
+
+def monitor_sentiment(threshold=-0.5):
+    """
+    Monitors your portfolio sentiment and sends an alert if it turns bearish.
+    """
+    df, summary = calculate_portfolio_value()
+    bearish_tickers = []
+
+    for ticker in df["Ticker"]:
+        try:
+            data = get_stock_data(ticker)
+            news = get_extended_news(ticker)
+            news_text = "\n".join([n["title"] + ": " + n["summary"] for n in news])
+            summary_text = summarize_text(ticker, data, news_text)
+            sentiment = analyze_sentiment(summary_text)
+
+            # Convert sentiment to numeric score
+            score_map = {"positive": 1, "neutral": 0, "negative": -1}
+            score = score_map.get(sentiment, 0)
+
+            if score <= threshold:
+                bearish_tickers.append((ticker, sentiment, summary_text))
+        except Exception as e:
+            print(f"Error analyzing {ticker}: {e}")
+
+    if bearish_tickers:
+        alert_message = "🚨 **Bearish Sentiment Detected**\n\n"
+        for t, s, summary_text in bearish_tickers:
+            alert_message += f"**{t}** — {s.upper()}\n{summary_text[:400]}...\n\n"
+        send_email(os.getenv("ALERT_EMAIL"), alert_message)
+        print("✅ Bearish sentiment alert sent!")
+    else:
+        print("No bearish sentiment detected.")
 
 
 def send_email(recipient_email, content):
@@ -79,3 +118,5 @@ def schedule_daily_alert(email):
 if __name__ == "__main__":
     email = os.getenv("EMAIL_SENDER") or input("Enter your email: ")
     schedule_daily_alert(email)
+    schedule.every().day.at("09:15").do(monitor_sentiment)
+

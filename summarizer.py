@@ -1,38 +1,35 @@
 import os
-import textwrap
 from openai import OpenAI
-import re
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-def summarize_text(ticker: str, fundamentals: dict, news_text: str) -> str:
+def summarize_text(ticker: str, fundamentals: dict, news: list):
+    """Generate a research-style summary combining quantitative and qualitative data."""
+    # Build the context string from fundamentals
+    fundamentals_text = "\n".join([f"{k}: {v}" for k, v in fundamentals.items() if v])
+    news_text = "\n".join([f"- {n['title']}: {n['summary']}" for n in news]) if news else "No recent news found."
+
     prompt = f"""
-    You are an equity research analyst. Given this data for {ticker}:
-    Fundamentals: {fundamentals}
-    News: {news_text}
-    Provide a concise 5-sentence summary including valuation, momentum, and sentiment.
+You are a senior equity research analyst. Write a clear, professional, one-paragraph summary of {ticker}.
+Use the fundamentals and recent news provided below. Include trends, profitability, valuation, and sentiment.
+
+### Fundamentals:
+{fundamentals_text}
+
+### News Headlines:
+{news_text}
     """
 
     try:
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}]
+            model="gpt-5.1-chat-latest",
+            messages=[
+                {"role": "system", "content": "You are a CFA-level finance analyst writing investor insights."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.4,
+            max_tokens=500
         )
-        # Clean up weird spacing or newlines
-        summary = response.choices[0].message.content
-        summary = re.sub(r"\\s+", " ", summary).strip()
-        return summary
+        return response.choices[0].message.content.strip()
     except Exception as e:
-        return f"(Fallback) Could not connect to LLM: {e}\\nKey insights:\\n- P/E: {fundamentals.get('P/E Ratio')}\\n- Market Cap: {fundamentals.get('Market Cap')}\\n- EPS: {fundamentals.get('EPS')}"
-    
-from textblob import TextBlob
-
-def analyze_sentiment(text: str) -> str:
-    blob = TextBlob(text)
-    polarity = blob.sentiment.polarity
-    if polarity > 0.1:
-        return "positive"
-    elif polarity < -0.1:
-        return "negative"
-    else:
-        return "neutral"
+        return f"(Fallback) Could not connect to LLM: {e}"
