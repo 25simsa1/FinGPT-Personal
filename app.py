@@ -20,14 +20,17 @@ st.set_page_config(page_title="FinGPT-Personal", layout="wide")
 # ✅ Correct Supabase environment variable usage
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+# Move debug BEFORE the error check
 st.write("DEBUG: SUPABASE_URL =", SUPABASE_URL)
 st.write("DEBUG: SUPABASE_KEY starts with =", SUPABASE_KEY[:10] if SUPABASE_KEY else None)
+st.write("DEBUG: All environment variables:", list(os.environ.keys()))
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     st.error("⚠️ Supabase credentials missing. Please set SUPABASE_URL and SUPABASE_KEY in your environment.")
+    st.stop()  # Stop execution here
 else:
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
 # --- Custom styling ---
 st.markdown("""
     <style>
