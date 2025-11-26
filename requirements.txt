@@ -11,3 +11,4 @@ alpha_vantage
 alpha_vantage
 feedparser
 beautifulsoup4
+supabase
