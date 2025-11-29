@@ -5,32 +5,19 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 import json, os
 from dotenv import load_dotenv
-<<<<<<< HEAD
 
 load_dotenv()
 
-=======
->>>>>>> c8587cdbf30a424787b25f5311353b6b3b998503
 from supabase import create_client, Client
 from data_fetcher import get_stock_data, get_extended_news
 from summarizer import summarize_text, analyze_sentiment
 from portfolio import add_holding, remove_holding, calculate_portfolio_value
 from alerts import send_email, generate_daily_summary
 
-<<<<<<< HEAD
 # --- Setup ---
 st.set_page_config(page_title="FinGPT-Personal", layout="wide")
 
 # Correct Supabase environment variable usage
-=======
-# --- Load environment variables ---
-load_dotenv()
-
-# --- Setup ---
-st.set_page_config(page_title="FinGPT-Personal", layout="wide")
-
-# ✅ Correct Supabase environment variable usage
->>>>>>> c8587cdbf30a424787b25f5311353b6b3b998503
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
@@ -40,11 +27,6 @@ if SUPABASE_URL and SUPABASE_KEY:
 else:
     st.error("⚠️ Supabase credentials missing. Please set SUPABASE_URL and SUPABASE_KEY in your environment.")
     supabase = None  # Set to None so the rest of the code doesn't crash
-<<<<<<< HEAD
-
-=======
-    
->>>>>>> c8587cdbf30a424787b25f5311353b6b3b998503
 # --- Custom styling ---
 st.markdown("""
     <style>
