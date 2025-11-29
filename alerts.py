@@ -1,21 +1,29 @@
-# alerts.py
-import time
-import schedule 
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+# alerts.py (no attachment version)
+import os
+import resend
+import traceback
+from dotenv import load_dotenv
 from portfolio import calculate_portfolio_value
 from summarizer import analyze_sentiment
-import os
-from dotenv import load_dotenv
+
+# --- Load environment ---
 load_dotenv()
+
+RESEND_API_KEY = os.getenv("RESEND_API_KEY")
+if not RESEND_API_KEY:
+    print("⚠️ Missing RESEND_API_KEY. Emails won't send.")
+else:
+    resend.api_key = RESEND_API_KEY
 
 
 def generate_daily_summary():
+    """Build portfolio summary text."""
     df, summary = calculate_portfolio_value()
-    total_value = summary['Total Value ($)']
-    total_pnl = summary['Net P/L ($)']
-    message = f"""FinGPT Daily Summary
+    total_value = summary.get("Total Value ($)", 0)
+    total_pnl = summary.get("Net P/L ($)", 0)
+
+    message = f"""
+FinGPT Daily Portfolio Summary
 
 Portfolio Value: ${total_value:,.2f}
 Net P/L: ${total_pnl:,.2f}
@@ -23,45 +31,32 @@ Net P/L: ${total_pnl:,.2f}
 Holdings Summary:
 {df.to_string(index=False)}
 
-Sentiment: {analyze_sentiment(str(df))}
+Sentiment Snapshot: {analyze_sentiment(str(df))}
+
+Generated automatically by FinGPT.me
 """
     return message
 
-def send_email(recipient_email, content):
-    sender_email = os.getenv("EMAIL_SENDER")
-    sender_password = os.getenv("EMAIL_PASSWORD")
 
-
-    msg = MIMEMultipart()
-    msg['From'] = sender_email
-    msg['To'] = recipient_email
-    msg['Subject'] = "FinGPT Daily Summary"
-    msg.attach(MIMEText(content, 'plain'))
+def send_email(recipient_email: str, content: str):
+    """Send an email using Resend API (no attachment)."""
+    if not RESEND_API_KEY:
+        print("❌ RESEND_API_KEY missing.")
+        return None
 
     try:
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
-        server.login(sender_email, sender_password)
-        server.send_message(msg)
-        server.quit()
-        print(f"✅ Daily summary email sent to {recipient_email}")
+        params = {
+            "from": "FinGPT Alerts <alerts@fingpt.me>",
+            "to": [recipient_email],
+            "subject": "Your FinGPT Daily Summary",
+            "text": content
+        }
+
+        response = resend.Emails.send(params)
+        print(f"✅ Email sent successfully to {recipient_email}")
+        return response
+
     except Exception as e:
-        print(f"❌ Error sending email: {e}")
-
-def schedule_daily_alert(email):
-    schedule.every().day.at("09:00").do(lambda: send_email(email, generate_daily_summary()))
-    print(f"Scheduled daily FinGPT alerts for {email} at 09:00")
-    while True:
-        schedule.run_pending()
-        time.sleep(60)
-
-def schedule_daily_alert(email):
-    schedule.every().day.at("09:00").do(lambda: send_email(email, generate_daily_summary()))
-    print(f"Scheduled daily FinGPT alerts for {email} at 09:00")
-    while True:
-        schedule.run_pending()
-        time.sleep(60)
-
-if __name__ == "__main__":
-    email = os.getenv("EMAIL_SENDER") or input("Enter your email: ")
-    schedule_daily_alert(email)
+        print(f"❌ Email send failed for {recipient_email}: {e}")
+        print(traceback.format_exc())
+        return None

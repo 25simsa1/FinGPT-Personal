@@ -8,3 +8,4 @@ content = "✅ FinGPT Email Test Successful! Your email configuration works."
 
 # Try sending the email
 send_email(recipient, content)
+
