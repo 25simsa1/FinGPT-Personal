@@ -5,19 +5,32 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 import json, os
 from dotenv import load_dotenv
+<<<<<<< HEAD
 
 load_dotenv()
 
+=======
+>>>>>>> c8587cdbf30a424787b25f5311353b6b3b998503
 from supabase import create_client, Client
 from data_fetcher import get_stock_data, get_extended_news
 from summarizer import summarize_text, analyze_sentiment
 from portfolio import add_holding, remove_holding, calculate_portfolio_value
 from alerts import send_email, generate_daily_summary
 
+<<<<<<< HEAD
 # --- Setup ---
 st.set_page_config(page_title="FinGPT-Personal", layout="wide")
 
 # Correct Supabase environment variable usage
+=======
+# --- Load environment variables ---
+load_dotenv()
+
+# --- Setup ---
+st.set_page_config(page_title="FinGPT-Personal", layout="wide")
+
+# ✅ Correct Supabase environment variable usage
+>>>>>>> c8587cdbf30a424787b25f5311353b6b3b998503
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
@@ -27,7 +40,11 @@ if SUPABASE_URL and SUPABASE_KEY:
 else:
     st.error("⚠️ Supabase credentials missing. Please set SUPABASE_URL and SUPABASE_KEY in your environment.")
     supabase = None  # Set to None so the rest of the code doesn't crash
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> c8587cdbf30a424787b25f5311353b6b3b998503
 # --- Custom styling ---
 st.markdown("""
     <style>
@@ -308,7 +325,11 @@ elif section == "AI Research Copilot":
 
         score_map = {"positive": 1, "neutral": 0, "negative": -1}
         score = score_map[sentiment]
+<<<<<<< HEAD
         fig_sent, ax = plt.subplots(figsize=(4, 0.5))
+=======
+        fig, ax = plt.subplots(figsize=(4, 0.5))
+>>>>>>> c8587cdbf30a424787b25f5311353b6b3b998503
         color = "green" if score > 0 else "red" if score < 0 else "gray"
         ax.barh(["Sentiment"], [score], color=color)
         ax.set_xlim(-1, 1)
@@ -367,7 +388,11 @@ elif section == "Daily Alerts Setup":
         else:
             st.info("Sending test email...")
             try:
+<<<<<<< HEAD
                 content = generate_daily_summary()
+=======
+                content, csv_path = generate_daily_summary()
+>>>>>>> c8587cdbf30a424787b25f5311353b6b3b998503
                 send_email(email, content)
                 st.success(f"✅ Test email sent successfully to {email}!")
             except Exception as e:
