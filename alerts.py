@@ -78,8 +78,6 @@ def monitor_sentiment(threshold=-0.5):
     else:
         print("No bearish sentiment detected.")
 
-<<<<<<< HEAD
-
 def send_email(recipient_email: str, content: str):
     """Send an email using Resend API (no attachment)."""
     if not RESEND_API_KEY:
@@ -102,52 +100,3 @@ def send_email(recipient_email: str, content: str):
         print(f"❌ Email send failed for {recipient_email}: {e}")
         print(traceback.format_exc())
         return None
-=======
-def send_email(recipient_email, content):
-    import resend
-    
-    resend.api_key = os.getenv("RESEND_API_KEY")
-    
-    if not resend.api_key:
-        raise Exception("RESEND_API_KEY not set in environment variables")
-    
-    params = {
-        "from": "FinGPT <onboarding@resend.dev>",
-        "to": [recipient_email],
-        "subject": "FinGPT Daily Summary",
-        "text": content,
-    }
-    
-    # Add attachment if exists
-    if os.path.exists("portfolio_report.csv"):
-        with open("portfolio_report.csv", "rb") as f:
-            import base64
-            content_base64 = base64.b64encode(f.read()).decode()
-            params["attachments"] = [{
-                "filename": "portfolio_report.csv",
-                "content": content_base64
-            }]
-    
-    response = resend.Emails.send(params)
-    print(f"✅ Email sent to {recipient_email}, ID: {response['id']}")
-    
-def schedule_daily_alert(email):
-    schedule.every().day.at("09:00").do(lambda: send_email(email, generate_daily_summary()))
-    print(f"Scheduled daily FinGPT alerts for {email} at 09:00")
-    while True:
-        schedule.run_pending()
-        time.sleep(60)
-
-def schedule_daily_alert(email):
-    schedule.every().day.at("09:00").do(lambda: send_email(email, generate_daily_summary()))
-    print(f"Scheduled daily FinGPT alerts for {email} at 09:00")
-    while True:
-        schedule.run_pending()
-        time.sleep(60)
-
-if __name__ == "__main__":
-    email = os.getenv("EMAIL_SENDER") or input("Enter your email: ")
-    schedule_daily_alert(email)
-    schedule.every().day.at("09:15").do(monitor_sentiment)
-
->>>>>>> c8587cdbf30a424787b25f5311353b6b3b998503
