@@ -1,58 +1,82 @@
 # summarizer.py
 import os
 from openai import OpenAI
-from textblob import TextBlob
 from dotenv import load_dotenv
 
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-
 def summarize_text(ticker, fundamentals, news_text):
     """
-    Generate an AI summary for a given stock.
-    Combines fundamentals + latest news context.
+    Generate a structured 3-paragraph equity summary:
+    Overview
+    Recent Developments
+    Risks & Outlook
     """
-    fundamentals_text = "\n".join([f"{k}: {v}" for k, v in fundamentals.items()])
-    prompt = f"""
-    You are a financial research assistant.
-    Summarize the current situation for {ticker}, combining:
-    - Fundamental data
-    - Recent news
-
-    Focus on sentiment, valuation, and outlook.
-    Keep it under 200 words.
     
-    FUNDAMENTALS:
-    {fundamentals_text}
+    # Handle None or empty fundamentals
+    if fundamentals and isinstance(fundamentals, dict) and len(fundamentals) > 0:
+        fundamentals_text = "\n".join([f"{k}: {v}" for k, v in fundamentals.items()])
+    else:
+        fundamentals_text = "Fundamental data not available."
 
-    NEWS:
-    {news_text}
-    """
+    prompt = f"""
+You are a professional equity research analyst.
+
+Write a concise, structured 3-paragraph summary of the stock **{ticker}** based on its fundamentals and recent market/news context.
+
+---
+
+### FUNDAMENTALS
+{fundamentals_text}
+
+### RECENT NEWS & MARKET EVENTS
+{news_text[:2000] if news_text else "No recent news available."}
+
+---
+
+### OUTPUT INSTRUCTIONS
+Write three clearly separated paragraphs (no bullet points):
+1️⃣ **Overview** — Describe what the company does, its sector, valuation ratios, market position, and key financial highlights.
+2️⃣ **Recent Developments** — Summarize at least two meaningful updates from the recent news or analyst commentary.
+3️⃣ **Risks & Outlook** — Provide a brief risk analysis and investor outlook based on financial or macro trends.
+
+Use a neutral, professional tone (similar to a Morningstar or Goldman Sachs summary).
+Keep the response under 250 words.
+Do NOT include section headers or markdown symbols — just clean paragraphs separated by a blank line.
+"""
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini",  # light & fast model
+            model="gpt-4o-mini",
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.6
+            max_tokens=500,
+            temperature=0.6,
         )
-        return response.choices[0].message.content.strip()
+        summary = response.choices[0].message.content.strip()
+
+        # Normalize paragraph spacing for UI formatting
+        summary = "\n\n".join([p.strip() for p in summary.split("\n") if p.strip()])
+
+        return summary
+
     except Exception as e:
-        return f"(Fallback Summary) Could not generate AI summary: {e}"
+        print(f"❌ Summarization error: {e}")
+        return "AI summary unavailable — check your OpenAI API key or network connection."
 
 
-def analyze_sentiment(text):
+def analyze_sentiment(summary):
     """
-    Simple sentiment analysis using TextBlob.
-    Returns: 'positive', 'neutral', or 'negative'
+    Simple rule-based sentiment analyzer using keywords from AI summary tone.
     """
-    blob = TextBlob(text)
-    polarity = blob.sentiment.polarity
+    text = summary.lower()
+    positive_keywords = ["growth", "strong", "beat", "bullish", "improved", "upside", "profit", "resilient", "momentum"]
+    negative_keywords = ["decline", "weak", "bearish", "loss", "downgrade", "headwind", "slowdown", "risk"]
 
-    if polarity > 0.1:
+    if any(word in text for word in positive_keywords):
         return "positive"
-    elif polarity < -0.1:
+    elif any(word in text for word in negative_keywords):
         return "negative"
     else:
         return "neutral"
