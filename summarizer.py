@@ -38,9 +38,9 @@ Write a concise, structured 3-paragraph summary of the stock **{ticker}** based 
 
 ### OUTPUT INSTRUCTIONS
 Write three clearly separated paragraphs (no bullet points):
-1️⃣ **Overview** — Describe what the company does, its sector, valuation ratios, market position, and key financial highlights.
-2️⃣ **Recent Developments** — Summarize at least two meaningful updates from the recent news or analyst commentary.
-3️⃣ **Risks & Outlook** — Provide a brief risk analysis and investor outlook based on financial or macro trends.
+1️ **Overview** — Describe what the company does, its sector, valuation ratios, market position, and key financial highlights.
+2️ **Recent Developments** — Summarize at least two meaningful updates from the recent news or analyst commentary.
+3️ **Risks & Outlook** — Provide a brief risk analysis and investor outlook based on financial or macro trends.
 
 Use a neutral, professional tone (similar to a Morningstar or Goldman Sachs summary).
 Keep the response under 250 words.
