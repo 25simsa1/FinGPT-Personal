@@ -63,7 +63,7 @@ One thing I want to be honest about in the design: a sentiment score is a proxy.
 ## Stack
 
 - **Language:** Python 3
-- **Web framework:** [Flask or Streamlit -- set this to whatever app.py actually imports]
+- **Web framework:** [Streamlit]
 - **Data:** Pandas, NumPy
 - **Charts:** Plotly
 - **AI / NLP:** Hugging Face Transformers
